@@ -9,7 +9,7 @@ module.exports = {
   target: 'web',
   cache: true,
   entry: {
-    module: path.join(srcPath, 'entry.js'),
+    dbpaster: path.join(srcPath, 'index.js'),
     common: ['react']
   },
   resolve: {
@@ -20,7 +20,7 @@ module.exports = {
   output: {
     path: path.join(__dirname, 'tmp'),
     publicPath: '',
-    filename: '[name].js',
+    filename: '[name]-out.js',
     library: ['DbPaster', '[name]'],
     pathInfo: true
   },

@@ -1,6 +1,7 @@
 import React from 'react';
+import MainImport from "components/main";
 
 React.render(
-  <h1>My hotloading Example</h1>,
+  <MainImport/>,
   document.getElementById('content')
 );
