@@ -1,39 +1,49 @@
 import React from 'react';
 
 class QueryBuilder extends React.Component {
+  static defaultProps = {historicalValues: {} };
   constructor(props) {
     super(props)
     console.log("QueryBuilder was constructed!");
     this.state = {
-      output: "waiting for input...",
-      variables: [],
-      knownValues: {}
+      templateText: "",
+      outputText: "waiting for input...",
+      variables: []
     };
   }
 
   handleQueryChanged(queryTemplate) {
     // Extract placeholders from the query, store their alias
     // { "$1": "user_id", "$2": "state" }
-    var bindVariables = this.findBindVariables(queryTemplate);
+    var placeholders = this.findVariablePlaceholders(queryTemplate);
 
     // Build variable value inputs
     // [{name: "$1", alias: "user_id", value: 4}, {name: "$2", alias: "state", value: "TX"}]
-    var variableList = this.buildVariableList(bindVariables, this.state.knownValues);
+    var bindVariables = this.buildBindVariables(placeholders, this.props.historicalValues);
 
     // Resolve variables to values so they can be plugged into query
     // { "$1": 4, "$2": "TX" }
-    var boundVariables = this.resolveVariables(variableList);
+    var variableValues = this.resolveVariables(bindVariables);
 
-    var output = this.buildOutput(queryTemplate, boundVariables);
-    this.setState( {output: output, variables: variableList, knownValues: this.state.knownValues} );
+    this.setState( {templateText: queryTemplate, variables: bindVariables} );
+    this.redrawOutput(queryTemplate, variableValues);
   }
 
   handleVariableChanged(variable) {
     console.log("A variable changed at the top!");
     console.dir(variable);
+    var variableValues = this.resolveVariables(this.state.variables);
+    variableValues[variable.name] = variable.value;
+    this.redrawOutput(this.state.templateText, variableValues);
+    //this.props.historicalValues["z"] = "changed!";
   }
 
-  buildVariableList(variables, values) {
+  redrawOutput(templateText, variableValues) {
+    var output = this.buildOutput(templateText, variableValues);
+    this.setState( {outputText: output} );
+  }
+
+  buildBindVariables(variables, values) {
     var list = []
     for (let key of Object.keys(variables)) {
       var alias = variables[key];
@@ -43,12 +53,12 @@ class QueryBuilder extends React.Component {
     return list;
   }
 
-  resolveVariables(variableList) {
-    var boundVariables = {}
-    for(let variable of variableList){
-      boundVariables[variable.name] = variable.value;
+  resolveVariables(bindVariables) {
+    var variableValues = {}
+    for(let variable of bindVariables){
+      variableValues[variable.name] = variable.value;
     }
-    return boundVariables;
+    return variableValues;
   }
 
   buildOutput(query, variables) {
@@ -61,7 +71,7 @@ class QueryBuilder extends React.Component {
     });
   }
 
-  findBindVariables(query) {
+  findVariablePlaceholders(query) {
     var re = /([a-z\"\._]+)\"?\s*([=|>|<=]+|IN)\s*(\$\d+)/gi;
     var m;
     var variables = {}
@@ -87,7 +97,7 @@ class QueryBuilder extends React.Component {
           onQueryChanged={this.handleQueryChanged.bind(this)}
           onVariableChanged={this.handleVariableChanged.bind(this)}
           variables={this.state.variables} />
-        <BoundQueryDisplay text={this.state.output} />
+        <BoundQueryDisplay text={this.state.outputText} />
       </div>
     )
   }
@@ -171,8 +181,11 @@ class BindVariableList extends React.Component {
 
 class BindVariableRow extends React.Component {
   textChanged(evt) {
-    var message = {}
-    message[this.props.name] = evt.target.value;
+    var message = {
+      "name": this.props.name,
+      "alias": this.props.alias,
+      "value": evt.target.value
+    };
     this.props.onValueChanged(message);
   }
 
