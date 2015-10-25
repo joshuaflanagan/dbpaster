@@ -4,28 +4,51 @@ class QueryBuilder extends React.Component {
   constructor(props) {
     super(props)
     console.log("QueryBuilder was constructed!");
-    this.state = { output: "waiting for input...", variables: {} };
+    this.state = {
+      output: "waiting for input...",
+      variables: [],
+      knownValues: {}
+    };
   }
 
-  handleInputsChanged(inputs) {
-    console.log("the inputs have changed, the builder acknowledges");
-    //TODO: knownValues needs to come from BindVariableList
-    var knownValues = {"account_id": 42, "user_id": 4148};
+  handleQueryChanged(queryTemplate) {
+    // Extract placeholders from the query, store their alias
+    // { "$1": "user_id", "$2": "state" }
+    var bindVariables = this.findBindVariables(queryTemplate);
 
-    var bindVariables = this.findBindVariables(inputs.text);
-    var boundVariables = this.resolveVariables(bindVariables, knownValues);
-    var output = this.buildOutput(inputs.text, boundVariables);
-    this.setState( {output: output, variables: bindVariables} );
+    // Build variable value inputs
+    // [{name: "$1", alias: "user_id", value: 4}, {name: "$2", alias: "state", value: "TX"}]
+    var variableList = this.buildVariableList(bindVariables, this.state.knownValues);
+
+    // Resolve variables to values so they can be plugged into query
+    // { "$1": 4, "$2": "TX" }
+    var boundVariables = this.resolveVariables(variableList);
+
+    var output = this.buildOutput(queryTemplate, boundVariables);
+    this.setState( {output: output, variables: variableList, knownValues: this.state.knownValues} );
   }
 
-  resolveVariables(variables, values) {
-    var resolved = {}
+  handleVariableChanged(variable) {
+    console.log("A variable changed at the top!");
+    console.dir(variable);
+  }
+
+  buildVariableList(variables, values) {
+    var list = []
     for (let key of Object.keys(variables)) {
       var alias = variables[key];
       var knownValue = values[alias];
-      resolved[key] = knownValue;
+      list.push({name: key, alias: alias, value: knownValue})
     }
-    return resolved;
+    return list;
+  }
+
+  resolveVariables(variableList) {
+    var boundVariables = {}
+    for(let variable of variableList){
+      boundVariables[variable.name] = variable.value;
+    }
+    return boundVariables;
   }
 
   buildOutput(query, variables) {
@@ -59,7 +82,10 @@ class QueryBuilder extends React.Component {
   render() {
     return (
       <div>The <strong>QueryBuilder</strong> holds all
-        <QueryInput onInputsChanged={this.handleInputsChanged.bind(this)} variables={this.state.variables} />
+        <QueryInput
+          onQueryChanged={this.handleQueryChanged.bind(this)}
+          onVariableChanged={this.handleVariableChanged.bind(this)}
+          variables={this.state.variables} />
         <BoundQueryDisplay text={this.state.output} />
       </div>
     )
@@ -79,12 +105,13 @@ class BoundQueryDisplay extends React.Component {
 class QueryInput extends React.Component {
   queryTextChanged(newText) {
     console.log("parent received new text: " + newText);
-    this.props.onInputsChanged({text: newText});
+    this.props.onQueryChanged(newText);
   }
 
   variableValueChanged(evt) {
     console.log("Variable value changed");
     console.dir(evt);
+    this.props.onVariableChanged(evt);
   }
 
   render() {
@@ -124,10 +151,13 @@ class QueryTemplateInput extends React.Component {
 class BindVariableList extends React.Component {
   render() {
     var rows = [];
-    var variables = this.props.variables || {};
-    for (let key of Object.keys(variables)) {
+    var variables = this.props.variables || [];
+    for (let variable of variables) {
       rows.push(
-        <BindVariableRow key={key} name={key} alias={variables[key]} onValueChanged={this.props.onAnyValueChanged} />
+        <BindVariableRow key={variable.name} name={variable.name}
+          alias={variable.alias}
+          initialValue={variable.value}
+          onValueChanged={this.props.onAnyValueChanged} />
       );
     }
     return (
@@ -150,7 +180,9 @@ class BindVariableRow extends React.Component {
       <li>
         <label>
         {this.props.alias} ({this.props.name}):
-          <input type="text" name={"entry_" + this.props.name} onChange={this.textChanged.bind(this)} />
+          <input type="text" name={"entry_" + this.props.name}
+            value={this.initialValue}
+            onChange={this.textChanged.bind(this)} />
         </label>
       </li>
     );
