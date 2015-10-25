@@ -93,10 +93,15 @@ class QueryBuilder extends React.Component {
   render() {
     return (
       <div>The <strong>QueryBuilder</strong> holds all
-        <QueryInput
-          onQueryChanged={this.handleQueryChanged.bind(this)}
-          onVariableChanged={this.handleVariableChanged.bind(this)}
-          variables={this.state.variables} />
+        <div style={{color: "red"}}>
+          <div>
+            <QueryTemplateInput onQueryChanged={this.handleQueryChanged.bind(this)} />
+          </div>
+          <div>
+            <BindVariableList variables={this.state.variables} onAnyValueChanged={this.handleVariableChanged.bind(this)} />
+          </div>
+        </div>
+
         <BoundQueryDisplay text={this.state.outputText} />
       </div>
     )
@@ -110,33 +115,6 @@ class BoundQueryDisplay extends React.Component {
         { this.props.text }
         </div>
     );
-  }
-}
-
-class QueryInput extends React.Component {
-  queryTextChanged(newText) {
-    console.log("parent received new text: " + newText);
-    this.props.onQueryChanged(newText);
-  }
-
-  variableValueChanged(evt) {
-    console.log("Variable value changed");
-    console.dir(evt);
-    this.props.onVariableChanged(evt);
-  }
-
-  render() {
-    return (
-        <div style={{color: "red"}}>
-        The QueryInput input
-          <div>
-            <QueryTemplateInput foo={33} onQueryChanged={this.queryTextChanged.bind(this)} />
-          </div>
-          <div>
-            <BindVariableList variables={this.props.variables} onAnyValueChanged={this.variableValueChanged.bind(this)} />
-          </div>
-        </div>
-        )
   }
 }
 
