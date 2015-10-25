@@ -82,6 +82,11 @@ class QueryInput extends React.Component {
     this.props.onInputsChanged({text: newText});
   }
 
+  variableValueChanged(evt) {
+    console.log("Variable value changed");
+    console.dir(evt);
+  }
+
   render() {
     return (
         <div style={{color: "red"}}>
@@ -90,7 +95,7 @@ class QueryInput extends React.Component {
             <QueryTemplateInput foo={33} onQueryChanged={this.queryTextChanged.bind(this)} />
           </div>
           <div>
-            <BindVariableList variables={this.props.variables} />
+            <BindVariableList variables={this.props.variables} onAnyValueChanged={this.variableValueChanged.bind(this)} />
           </div>
         </div>
         )
@@ -121,7 +126,9 @@ class BindVariableList extends React.Component {
     var rows = [];
     var variables = this.props.variables || {};
     for (let key of Object.keys(variables)) {
-      rows.push(<BindVariableRow key={key} name={key} alias={variables[key]} />);
+      rows.push(
+        <BindVariableRow key={key} name={key} alias={variables[key]} onValueChanged={this.props.onAnyValueChanged} />
+      );
     }
     return (
         <ul>
@@ -132,12 +139,18 @@ class BindVariableList extends React.Component {
 }
 
 class BindVariableRow extends React.Component {
+  textChanged(evt) {
+    var message = {}
+    message[this.props.name] = evt.target.value;
+    this.props.onValueChanged(message);
+  }
+
   render() {
     return (
       <li>
         <label>
         {this.props.alias} ({this.props.name}):
-          <input type="text" name={"entry_" + this.props.name} />
+          <input type="text" name={"entry_" + this.props.name} onChange={this.textChanged.bind(this)} />
         </label>
       </li>
     );
