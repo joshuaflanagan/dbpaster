@@ -62,7 +62,7 @@ class QueryBuilder extends React.Component {
   }
 
   findBindVariables(query) {
-    var re = /([a-z\"\._]+)\"?\s*=\s*(\$\d+)/g;
+    var re = /([a-z\"\._]+)\"?\s*([=|>|<=]+|IN)\s*(\$\d+)/gi;
     var m;
     var variables = {}
     while ((m = re.exec(query)) !== null) {
@@ -71,9 +71,10 @@ class QueryBuilder extends React.Component {
       }
       // m[0] = user_id = $1
       // m[1] = user_id
-      // m[2] = $1
+      // m[2] = '='
+      // m[3] = $1
       // m.index = 35
-      variables[m[2]] = m[1];
+      variables[m[3]] = m[1];
       console.dir(m);
     }
     return variables;
