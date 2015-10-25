@@ -3,7 +3,6 @@ import React from 'react';
 class QueryBuilder extends React.Component {
   constructor(props) {
     super(props)
-    console.log("QueryBuilder was constructed!");
     this.state = {
       templateText: "",
       variables: {},
@@ -45,8 +44,8 @@ class QueryBuilder extends React.Component {
 
   render() {
     return (
-      <div>The <strong>QueryBuilder</strong> holds all
-        <div style={{color: "red"}}>
+      <div>Paste in your database query
+        <div>
           <div>
             <QueryTemplateInput onQueryChanged={this.handleQueryChanged.bind(this)} />
           </div>
@@ -75,7 +74,7 @@ class BoundQueryDisplay extends React.Component {
   render() {
     var output = this.buildOutput(this.props.template, this.props.values);
     return (
-        <div style={{color: "blue"}}>
+        <div>
         { output }
         </div>
     );
