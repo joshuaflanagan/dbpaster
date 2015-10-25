@@ -195,7 +195,7 @@ class BindVariableRow extends React.Component {
         <label>
         {this.props.alias} ({this.props.name}):
           <input type="text" name={"entry_" + this.props.name}
-            value={this.initialValue}
+            defaultValue={this.props.initialValue}
             onChange={this.textChanged.bind(this)} />
         </label>
       </li>
